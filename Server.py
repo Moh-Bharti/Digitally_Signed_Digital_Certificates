@@ -27,7 +27,8 @@ def login():
         p = request.form['password']
         if user_keys.__contains__(u) and str(User_info.get(u))==p:
 
-            return redirect(url_for('hello'))
+            # return redirect(url_for('hello'))
+            return render_template('home.html')
 
         else:
 
