@@ -19,11 +19,17 @@ from PyPDF2 import *
 
 app = Flask(__name__,template_folder='templates')
 
-User_info = dict({'moh':[123,2016247],'abhishek':[234,2016006],'lakshay':[456,2016222],'kanha':[908,2016333]})
+#password of users which have been hashed first before storing them in the database for better security
+mohPassword=hashlib.sha3_512("123".encode()).hexdigest()
+abhishekPassword=hashlib.sha3_512("234".encode()).hexdigest()
+lakshayPassword=hashlib.sha3_512("456".encode()).hexdigest()
+kanhaPassword=hashlib.sha3_512("908".encode()).hexdigest()
+User_info = dict({'moh':[mohPassword,2016247],'abhishek':[abhishekPassword,2016006],'lakshay':[lakshayPassword,2016222],'kanha':[kanhaPassword,2016333]})
 print(User_info.keys())
 print(User_info.values())
 
-@app.route('/certificate',methods=['GET','POST'])
+# @app.route('/certificate',methods=['GET','POST'])
+@app.route('/',methods=['GET','POST'])
 def certificate():
     #"Arre hello bol de"
     error = None
@@ -31,17 +37,15 @@ def certificate():
         user_keys = User_info.keys()
         user_values = User_info.values()
         u = request.form['username']
-        p = str(hashlib.sha3_512(request.form['password'].encode())).encode()
-        r = str(hashlib.sha3_512(str(request.form['rollnumber']).encode())).encode()
+        p = hashlib.sha3_512((request.form['password']).encode()).hexdigest()
+        # r = str(hashlib.sha3_512(str(request.form['rollnumber']).encode())).encode()
+        r=int(request.form['rollnumber'])
 
-
-        if user_keys.__contains__(u) and str(hashlib.sha3_512(str(User_info.get(u)[0]).encode())).encode() == p and \
-                str(hashlib.sha3_512(str(User_info.get(u)[1]).encode())).encode() == r:
-            pfile = pdf_file(u, int(request.form['rollnumber']))
+        if user_keys.__contains__(u) and (User_info.get(u)[0]==p) and User_info.get(u)[1] == r:
+            pfile = pdf_file(u,r)
             # return redirect(url_for('hello'))
             # return render_template('home.html')
-            return send_file('F:/Semester_08/Network Security/Lab_Assignments_03/venv/Digital_Certificates_Server/' + pfile[0],
-                             attachment_filename=pfile[0])
+            return send_file('/home/abhishek2309/Documents/Network Security/ass3/Digitally_Signed_Digital_Certificates/' + pfile[0],attachment_filename=pfile[0])
 
         else:
 
@@ -133,7 +137,7 @@ def pdf_file(userName, userRollNumber):
     watermark(t,newName)
     pfile1 = pdf1.output("Signature"+".pdf")
     watermark(t,"Signature.pdf")
-    loc = "F:\\Semester_08\\Network Security\\Lab_Assignments_03\\venv\\Digital_Certificates_Server\\moh_16247"
+    loc = "/home/abhishek2309/Documents/Network Security/ass3/Digitally_Signed_Digital_Certificates/"
     x = [loc+"\\"+a for a in os.listdir(loc) if a.endswith(".pdf")]
     merger = PdfFileMerger()
 
@@ -151,23 +155,24 @@ def pdf_file(userName, userRollNumber):
     return (newName, pfile)
 
 
+# @app.route('/login',methods=['GET','POST'])
+# def login():
+# @app.route('/download',methods=['GET','POST'])
+# def download():
+#     error = None
+#     if request.method == 'POST':
+#         user_keys=User_info.keys()
+#         user_values=User_info.values()
+#         u = request.form['username']
+#         p = request.form['password']
+#         if user_keys.__contains__(u) and str(User_info.get(u)[0])==p:
 
-@app.route('/login',methods=['GET','POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        user_keys=User_info.keys()
-        user_values=User_info.values()
-        u = request.form['username']
-        p = request.form['password']
-        if user_keys.__contains__(u) and str(User_info.get(u)[0])==p:
+#             return redirect(url_for('certificate'))
 
-            return redirect(url_for('certificate'))
+#         else:
 
-        else:
-
-            error = 'Invalid Username or password:' + " " + request.form['username']
-    return render_template('login.html',error=error)
+#             error = 'Invalid Username or password:' + " " + request.form['username']
+#     return render_template('Download.html',error=error)
 
 if __name__== "__main__":
     app.run(debug=True)
